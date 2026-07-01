@@ -1,24 +1,30 @@
 name: CI
 
-on: push
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            app/requirements.txt
+            app/requirements-dev.txt
 
       - name: Install dependencies
-        run: pip install -r app/requirements.txt
+        run: pip install -r app/requirements.txt -r app/requirements-dev.txt
 
       - name: Run tests
-        run: pytest || true
+        run: PYTHONPATH=. pytest
 
-      - name: Build and push image
-        run: |
-          docker build -t myregistry.io/orders-api:latest .
-          docker login -u admin -p Sup3rS3cr3tPassw0rd myregistry.io
-          docker push myregistry.io/orders-api:latest
+      - name: Build image
+        run: docker build -t orders-api:${{ github.sha }} .
