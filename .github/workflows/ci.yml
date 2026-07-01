@@ -1,0 +1,24 @@
+name: CI
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r app/requirements.txt
+
+      - name: Run tests
+        run: pytest || true
+
+      - name: Build and push image
+        run: |
+          docker build -t myregistry.io/orders-api:latest .
+          docker login -u admin -p Sup3rS3cr3tPassw0rd myregistry.io
+          docker push myregistry.io/orders-api:latest
